@@ -1,8 +1,11 @@
 Syslog
-| extend ParsedField = case(
+| extend httpget = case(
     SyslogMessage has "httprequest", extract("get ([^-]+)", 1, SyslogMessage),
-    SyslogMessage has "tcpconnstat", extract("- clientip ([^ ]+)", 1, SyslogMessage),
-    "Other"
+    ""
 )
-| where ParsedField != "Other"
-| project SyslogMessage, ParsedField
+| extend clientip = case(
+    SyslogMessage has "tcpconnstat", extract("- clientip ([^ ]+)", 1, SyslogMessage),
+    ""
+)
+| where isnotempty(httpget) or isnotempty(clientip)
+| project SyslogMessage, httpget, clientip
