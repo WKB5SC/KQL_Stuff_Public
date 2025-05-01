@@ -1,0 +1,108 @@
+{
+    "properties": {
+        "immutableId": "dcr-bdc9f186088d423b94c344704e2292c0",
+        "streamDeclarations": {},
+        "dataSources": {
+            "syslog": [
+                {
+                    "streams": [
+                        "Microsoft-Syslog"
+                    ],
+                    "facilityNames": [
+                        "alert",
+                        "audit",
+                        "auth",
+                        "authpriv",
+                        "clock",
+                        "cron",
+                        "daemon",
+                        "ftp",
+                        "kern",
+                        "local1",
+                        "local2",
+                        "local3",
+                        "local4",
+                        "local5",
+                        "local6",
+                        "local7",
+                        "lpr",
+                        "mail",
+                        "news",
+                        "nopri",
+                        "ntp",
+                        "syslog",
+                        "user",
+                        "uucp"
+                    ],
+                    "logLevels": [
+                        "Debug",
+                        "Info",
+                        "Notice",
+                        "Warning",
+                        "Error",
+                        "Critical",
+                        "Alert",
+                        "Emergency"
+                    ],
+                    "name": "sysLogsDataSource-1688419672"
+                },
+                {
+                    "streams": [
+                        "Microsoft-Syslog"
+                    ],
+                    "facilityNames": [
+                        "local0"
+                    ],
+                    "logLevels": [
+                        "Info",
+                        "Notice",
+                        "Warning",
+                        "Error",
+                        "Critical",
+                        "Alert",
+                        "Emergency"
+                    ],
+                    "name": "sysLogsDataSource--1469397783"
+                }
+            ]
+        },
+        "destinations": {
+            "logAnalytics": [
+                {
+                    "workspaceResourceId": "/subscriptionsx/resourceGroups/sentinel/providers/Microsoft.OperationalInsights/workspaces/lasentinel",
+                    "workspaceId": "1",
+                    "name": "la-759670823"
+                }
+            ]
+        },
+        "dataFlows": [
+            {
+                "streams": [
+                    "Microsoft-Syslog"
+                ],
+                "destinations": [
+                    "la-759670823"
+                ],
+                "transformKql": "source",
+                "outputStream": "Microsoft-Syslog"
+            }
+        ],
+        "provisioningState": "Succeeded"
+    },
+    "location": "eastus",
+    "tags": {},
+    "kind": "Linux",
+    "id": "/subscriptions/1/resourceGroups/Sentinel/providers/Microsoft.Insights/dataCollectionRules/dcr_Netscaler_Filtered",
+    "name": "dcr_Netscaler_Filtered",
+    "type": "Microsoft.Insights/dataCollectionRules",
+    "etag": "\"1\"",
+    "systemData": {
+        "createdBy": "f",
+        "createdByType": "User",
+        "createdAt": "2025-05-01T18:28:31.5473574Z",
+        "lastModifiedBy": "AHSXGN59@nortonhealthcare.org",
+        "lastModifiedByType": "User",
+        "lastModifiedAt": "2025-05-01T18:28:31.5473574Z"
+    },
+    "apiVersion": "2022-06-01"
+}
