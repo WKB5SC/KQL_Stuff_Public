@@ -1,108 +1,20 @@
-{
-    "properties": {
-        "immutableId": "dcr-bdc9f186088d423b94c344704e2292c0",
-        "streamDeclarations": {},
-        "dataSources": {
-            "syslog": [
-                {
-                    "streams": [
-                        "Microsoft-Syslog"
-                    ],
-                    "facilityNames": [
-                        "alert",
-                        "audit",
-                        "auth",
-                        "authpriv",
-                        "clock",
-                        "cron",
-                        "daemon",
-                        "ftp",
-                        "kern",
-                        "local1",
-                        "local2",
-                        "local3",
-                        "local4",
-                        "local5",
-                        "local6",
-                        "local7",
-                        "lpr",
-                        "mail",
-                        "news",
-                        "nopri",
-                        "ntp",
-                        "syslog",
-                        "user",
-                        "uucp"
-                    ],
-                    "logLevels": [
-                        "Debug",
-                        "Info",
-                        "Notice",
-                        "Warning",
-                        "Error",
-                        "Critical",
-                        "Alert",
-                        "Emergency"
-                    ],
-                    "name": "sysLogsDataSource-1688419672"
-                },
-                {
-                    "streams": [
-                        "Microsoft-Syslog"
-                    ],
-                    "facilityNames": [
-                        "local0"
-                    ],
-                    "logLevels": [
-                        "Info",
-                        "Notice",
-                        "Warning",
-                        "Error",
-                        "Critical",
-                        "Alert",
-                        "Emergency"
-                    ],
-                    "name": "sysLogsDataSource--1469397783"
-                }
-            ]
-        },
-        "destinations": {
-            "logAnalytics": [
-                {
-                    "workspaceResourceId": "/subscriptionsx/resourceGroups/sentinel/providers/Microsoft.OperationalInsights/workspaces/lasentinel",
-                    "workspaceId": "1",
-                    "name": "la-759670823"
-                }
-            ]
-        },
-        "dataFlows": [
-            {
-                "streams": [
-                    "Microsoft-Syslog"
-                ],
-                "destinations": [
-                    "la-759670823"
-                ],
-                "transformKql": "source",
-                "outputStream": "Microsoft-Syslog"
-            }
-        ],
-        "provisioningState": "Succeeded"
-    },
-    "location": "eastus",
-    "tags": {},
-    "kind": "Linux",
-    "id": "/subscriptions/1/resourceGroups/Sentinel/providers/Microsoft.Insights/dataCollectionRules/dcr_Netscaler_Filtered",
-    "name": "dcr_Netscaler_Filtered",
-    "type": "Microsoft.Insights/dataCollectionRules",
-    "etag": "\"1\"",
-    "systemData": {
-        "createdBy": "f",
-        "createdByType": "User",
-        "createdAt": "2025-05-01T18:28:31.5473574Z",
-        "lastModifiedBy": "AHSXGN59@nortonhealthcare.org",
-        "lastModifiedByType": "User",
-        "lastModifiedAt": "2025-05-01T18:28:31.5473574Z"
-    },
-    "apiVersion": "2022-06-01"
-}
+"transformKql": "source 
+| where Facility contains \"0\" 
+| extend User = extract(\"User ([^ ]+)\", 1, SyslogMessage) 
+| extend ClientIP = extract(\"- Client_ip ([^ ]+)\", 1, SyslogMessage) 
+| extend NatIP = extract(\"- Nat_ip ([^-]+)\", 1, SyslogMessage) 
+| extend Source = extract(\"- Source ([^:]+)\", 1, SyslogMessage) 
+| extend Access = extract(\"- Access ([^ ]+)\", 1, SyslogMessage) 
+| extend Failure_Reason = extract(\"- Failure_reason ([^-]+)\", 1, SyslogMessage) 
+| extend Event = extract(\"default ([^ ]+)\", 1, SyslogMessage) 
+| extend Destination = extract(\"- Destination ([^ ]+)\", 1, SyslogMessage) 
+| extend UserApplication = extract(\"- username:domainname ([^:]+)\", 1, SyslogMessage) 
+| extend StartTime = extract(\"- startTime \\\"([^ \"]+)\\\", 1, SyslogMessage) 
+| extend EndTime = extract(\"- endTime \\\"([^ \"]+)\\\", 1, SyslogMessage) 
+| extend Duration = extract(\"- Duration ([^ ]+)\", 1, SyslogMessage) 
+| extend TotalBytesSend = extract(\"- Total_bytes_send ([^ ]+)\", 1, SyslogMessage) 
+| extend TotalBytesRec = extract(\"- Total_bytes_recv ([^ ]+)\", 1, SyslogMessage) 
+| extend HTTP_Message = extract(\"Message = ([^:]+)\", 1, SyslogMessage) 
+| extend HTTP_Get = extract(\"GET ([^-]+)\", 1, SyslogMessage) 
+| extend HTTP_Post = extract(\"POST ([^-]+)\", 1, SyslogMessage) 
+| extend Command = extract(\"- Command ([^-]+)\", 1, SyslogMessage)"
