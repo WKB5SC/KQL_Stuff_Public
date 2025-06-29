@@ -9,3 +9,29 @@ DeviceProcessEvents
 | where FolderPath startswith AppDataPath
 | project Timestamp, DeviceName, AccountName, FileName, ProcessCommandLine, FolderPath, InitiatingProcessFileName
 | order by Timestamp desc
+
+DeviceProcessEvents
+| where ProcessCommandLine has_any ("APPDOMAIN_MANAGER_ASM", "APPDOMAIN_MANAGER_TYPE", "COMPLUS_VERSION")
+| project Timestamp, DeviceName, AccountName, FileName, ProcessCommandLine, InitiatingProcessFileName
+| order by Timestamp desc
+
+DeviceNetworkEvents
+| where RemoteUrl has_any ("amazonaws.com", "cloudfront.net", "lambda-url.", "execute-api.")
+| where InitiatingProcessFileName in~ ("dfsvc.exe", "ZSATray.exe", "umt.exe")
+| project Timestamp, DeviceName, InitiatingProcessFileName, RemoteUrl, RemoteIP, ActionType, ReportId
+| order by Timestamp desc
+
+let clickonceEvents = DeviceProcessEvents
+    | where InitiatingProcessFileName =~ "dfsvc.exe" and ProcessCommandLine has ".application"
+    | project DeviceId, ClickOnceTime = Timestamp, ClickOnceProc = FileName;
+
+let awsTraffic = DeviceNetworkEvents
+    | where RemoteUrl has_any ("amazonaws.com", "cloudfront.net", "lambda-url.", "execute-api.")
+    | project DeviceId, NetworkTime = Timestamp, RemoteUrl, InitiatingProcessFileName;
+
+clickonceEvents
+| join kind=inner (awsTraffic) on DeviceId
+| where abs(datetime_diff("minute", ClickOnceTime, NetworkTime)) < 10
+| project DeviceId, ClickOnceTime, NetworkTime, ClickOnceProc, InitiatingProcessFileName, RemoteUrl
+
+
