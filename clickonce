@@ -34,4 +34,61 @@ clickonceEvents
 | where abs(datetime_diff("minute", ClickOnceTime, NetworkTime)) < 10
 | project DeviceId, ClickOnceTime, NetworkTime, ClickOnceProc, InitiatingProcessFileName, RemoteUrl
 
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\.NETFramework\Security\TrustManager\PromptingLevel
+Internet = Disabled
+
+Preventing ClickOnce-based attacks—like the recent OneClik campaign—requires a layered defense strategy that combines system hardening, user awareness, and proactive monitoring. Here’s how to stay ahead of the threat:
+
+---
+
+🔐 1. Harden the Environment
+
+• Disable ClickOnce from Internet Zones
+Set the following registry key to block installations from untrusted sources:HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\.NETFramework\Security\TrustManager\PromptingLevel
+Internet = DisabledThis prevents users from being prompted to install ClickOnce apps from the web A.
+• Restrict ClickOnce Usage
+If your organization doesn’t rely on ClickOnce, consider disabling it entirely via Group Policy or endpoint management tools.
+• Enforce Code Signing
+Require all ClickOnce apps to be signed with trusted certificates. Unsigned or self-signed apps should be blocked or flagged B.
+
+
+---
+
+🧠 2. Educate and Empower Users
+
+• Phishing Awareness
+Train users to recognize suspicious links and popups, especially those prompting software installs from unfamiliar domains.
+• Visual Cues
+Teach users to inspect the ClickOnce install dialog—malicious apps often spoof names like “Windows Update” or use misleading domains C.
+
+
+---
+
+🕵️‍♂️ 3. Monitor and Detect
+
+• Baseline Legitimate ClickOnce Activity
+Understand which apps are deployed via ClickOnce in your environment. Anything outside that baseline is suspicious.
+• Hunt for Known Abuse Patterns
+Use Defender KQL queries to detect:• `dfsvc.exe` launching `.application` files
+• AppDomainManager injection
+• AWS-based C2 traffic from unexpected processes
+
+• Log and Alert on Rundll32 Abuse
+Monitor for commands like:rundll32.exe dfshim.dll,ShOpenVerbApplicationwhich can be used to stealthily launch ClickOnce payloads A.
+
+
+---
+
+🧰 4. Use Trusted App Deployment Policies
+
+• Trusted Publisher Certificates
+Configure enterprise-wide trusted publishers so only vetted ClickOnce apps can install silently B.
+• Zone-Based Permissions
+Limit ClickOnce permissions based on deployment source (e.g., full trust only for internal network shares).
+
+
+---
+
+Would you like help creating a Group Policy template or registry script to enforce these protections? I can also help you simulate a safe test of ClickOnce behavior in a lab environment.
+
 
