@@ -1,0 +1,4 @@
+DeviceProcessEvents
+| where InitiatingProcessFileName in~ ("dfsvc.exe", "rundll32.exe")
+| where FileName endswith ".application" or ProcessCommandLine contains ".application"
+| project Timestamp, DeviceName, FileName, ProcessCommandLine, InitiatingProcessFileName
