@@ -2,3 +2,10 @@ DeviceProcessEvents
 | where InitiatingProcessFileName in~ ("dfsvc.exe", "rundll32.exe")
 | where FileName endswith ".application" or ProcessCommandLine contains ".application"
 | project Timestamp, DeviceName, FileName, ProcessCommandLine, InitiatingProcessFileName
+
+DeviceProcessEvents
+| where InitiatingProcessFileName =~ "dfsvc.exe" or ProcessCommandLine has ".application"
+| extend AppDataPath = strcat(@"C:\Users\", AccountName, @"\AppData\Local\Apps\2.0")
+| where FolderPath startswith AppDataPath
+| project Timestamp, DeviceName, AccountName, FileName, ProcessCommandLine, FolderPath, InitiatingProcessFileName
+| order by Timestamp desc
