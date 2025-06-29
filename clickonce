@@ -112,3 +112,98 @@ The `.application` file triggers a .NET-based loader (OneClikNet), which uses Ap
 So while the `.application` file isn’t an executable itself, it’s the launchpad for the entire attack—making it a critical component of the OneClik threat.
 
 Want to see how to block `.application` files from launching in your environment or simulate this behavior safely in a lab? I’ve got you covered.
+
+Absolutely, N. Here’s a ClickOnce-focused KQL hunting pack designed to help you detect OneClik-style attacks across multiple stages—from initial execution to command-and-control (C2) activity and potential persistence.
+
+---
+
+🧭 1. Detect ClickOnce Launch via `.application` Files
+
+DeviceProcessEvents
+| where ProcessCommandLine has ".application"
+| where InitiatingProcessFileName in~ ("dfsvc.exe", "rundll32.exe")
+| project Timestamp, DeviceName, AccountName, FileName, ProcessCommandLine, InitiatingProcessFileName
+
+Flags ClickOnce apps launched via trusted binaries.
+
+---
+
+🧬 2. AppDomainManager Injection Indicators
+
+DeviceProcessEvents
+| where ProcessCommandLine has_any ("APPDOMAIN_MANAGER_ASM", "APPDOMAIN_MANAGER_TYPE", "COMPLUS_VERSION")
+| project Timestamp, DeviceName, AccountName, FileName, ProcessCommandLine
+
+Detects abuse of .NET AppDomainManager for stealthy payload injection.
+
+---
+
+☁️ 3. Suspicious AWS-Based C2 Traffic
+
+DeviceNetworkEvents
+| where RemoteUrl has_any ("amazonaws.com", "cloudfront.net", "lambda-url.", "execute-api.")
+| where InitiatingProcessFileName in~ ("dfsvc.exe", "ZSATray.exe", "umt.exe")
+| project Timestamp, DeviceName, RemoteUrl, InitiatingProcessFileName, RemoteIP, ActionType
+
+Flags unexpected cloud traffic from binaries often abused in OneClik.
+
+---
+
+🔗 4. Correlate ClickOnce Launch with AWS C2
+
+let clickonce = DeviceProcessEvents
+    | where InitiatingProcessFileName =~ "dfsvc.exe" and ProcessCommandLine has ".application"
+    | project DeviceId, ClickOnceTime = Timestamp, ClickOnceProc = FileName;
+
+let awsC2 = DeviceNetworkEvents
+    | where RemoteUrl has_any ("amazonaws.com", "cloudfront.net", "lambda-url.", "execute-api.")
+    | project DeviceId, NetworkTime = Timestamp, RemoteUrl, InitiatingProcessFileName;
+
+clickonce
+| join kind=inner (awsC2) on DeviceId
+| where abs(datetime_diff("minute", ClickOnceTime, NetworkTime)) < 10
+| project DeviceId, ClickOnceTime, NetworkTime, ClickOnceProc, InitiatingProcessFileName, RemoteUrl
+
+Connects ClickOnce execution with suspicious cloud traffic within a short window.
+
+---
+
+🧼 5. Detect Rundll32 Abuse for ClickOnce
+
+DeviceProcessEvents
+| where InitiatingProcessFileName =~ "rundll32.exe"
+| where ProcessCommandLine has "dfshim.dll,ShOpenVerbApplication"
+| project Timestamp, DeviceName, AccountName, ProcessCommandLine
+
+Identifies stealthy ClickOnce launches via `rundll32`.
+
+---
+
+🧾 6. Detect Unsigned or Rare ClickOnce Apps
+
+DeviceProcessEvents
+| where ProcessCommandLine has ".application"
+| extend Signer = tolower(SignerName)
+| where isnull(Signer) or Signer !contains "microsoft"
+| summarize count() by FileName, Signer, AccountName, DeviceName
+
+Flags unsigned or unusually signed ClickOnce manifests.
+
+---
+
+Would you like me to bundle these into a workbook or Sentinel hunting rule format? I can also help you simulate benign ClickOnce activity to baseline your environment.
+
+let clickonce = DeviceProcessEvents
+    | where InitiatingProcessFileName =~ "dfsvc.exe"
+    | where ProcessCommandLine has ".application"
+    | project DeviceId, ClickOnceTime = Timestamp, AccountName, FileName, ProcessCommandLine;
+
+let awsC2 = DeviceNetworkEvents
+    | where RemoteUrl has_any ("amazonaws.com", "cloudfront.net", "lambda-url.", "execute-api.")
+    | where InitiatingProcessFileName in~ ("dfsvc.exe", "ZSATray.exe", "umt.exe")
+    | project DeviceId, NetworkTime = Timestamp, RemoteUrl, InitiatingProcessFileName;
+
+clickonce
+| join kind=inner (awsC2) on DeviceId
+| where abs(datetime_diff("minute", ClickOnceTime, NetworkTime)) < 10
+| project DeviceId, ClickOnceTime, NetworkTime, AccountName, ClickOnceBinary = FileName, CommandLine = ProcessCommandLine, AWS_URL = RemoteUrl, C2Process = InitiatingProcessFileName
