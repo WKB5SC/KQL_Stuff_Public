@@ -207,3 +207,60 @@ clickonce
 | join kind=inner (awsC2) on DeviceId
 | where abs(datetime_diff("minute", ClickOnceTime, NetworkTime)) < 10
 | project DeviceId, ClickOnceTime, NetworkTime, AccountName, ClickOnceBinary = FileName, CommandLine = ProcessCommandLine, AWS_URL = RemoteUrl, C2Process = InitiatingProcessFileName
+
+
+
+
+To detect AppDomainManager injection (your #2) using Microsoft Defender and KQL, you’ll want to focus on how attackers manipulate environment variables or `.config` files to hijack .NET application behavior. Here’s a focused KQL query pack to help you uncover this stealthy technique:
+
+---
+
+🧬 1. Detect Suspicious Environment Variables
+
+Attackers often set variables like `APPDOMAIN_MANAGER_ASM` or `APPDOMAIN_MANAGER_TYPE` to hijack .NET execution flow.
+
+DeviceProcessEvents
+| where ProcessCommandLine has_any ("APPDOMAIN_MANAGER_ASM", "APPDOMAIN_MANAGER_TYPE", "COMPLUS_VERSION")
+| project Timestamp, DeviceName, AccountName, FileName, ProcessCommandLine, InitiatingProcessFileName
+| order by Timestamp desc
+
+---
+
+🧾 2. Detect `.exe.config` File Drops
+
+Malicious `.config` files can be used to inject AppDomainManager logic into trusted binaries.
+
+DeviceFileEvents
+| where FileName endswith ".exe.config"
+| where ActionType == "FileCreated"
+| project Timestamp, DeviceName, FileName, FolderPath, InitiatingProcessFileName
+
+---
+
+🔍 3. Look for Matching `.exe` and `.exe.config` Pairs
+
+This flags when a config file is dropped alongside a matching executable—often a sign of hijack setup.
+
+let exeFiles = DeviceFileEvents
+    | where FileName endswith ".exe"
+    | extend BaseName = tostring(split(FileName, ".")[0])
+    | project DeviceId, FolderPath, BaseName, ExeTime = Timestamp;
+
+let configFiles = DeviceFileEvents
+    | where FileName endswith ".exe.config"
+    | extend BaseName = tostring(split(FileName, ".")[0])
+    | project DeviceId, FolderPath, BaseName, ConfigTime = Timestamp;
+
+exeFiles
+| join kind=inner (configFiles) on DeviceId, FolderPath, BaseName
+| where abs(datetime_diff("minute", ExeTime, ConfigTime)) < 10
+| project DeviceId, FolderPath, BaseName, ExeTime, ConfigTime
+
+---
+
+🧠 Bonus Tip
+
+If you know the name of the injected AppDomainManager class or DLL, you can also hunt for it in `DeviceImageLoadEvents` or `DeviceProcessModuleEvents`.
+
+Would you like to wrap this into a Sentinel workbook or add anomaly scoring to reduce false positives? I can help you take it even further.
+
