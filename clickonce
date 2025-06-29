@@ -91,4 +91,24 @@ Limit ClickOnce permissions based on deployment source (e.g., full trust only fo
 
 Would you like help creating a Group Policy template or registry script to enforce these protections? I can also help you simulate a safe test of ClickOnce behavior in a lab environment.
 
+Yes—it absolutely does. The OneClik attack campaign relies on a `.application` file as its initial delivery mechanism A.
 
+Here’s how it fits into the attack chain:
+
+🧨 Phishing + ClickOnce Abuse
+Victims receive phishing emails linking to fake websites (often hosted on Microsoft Azure). These sites serve a malicious `.application` file, which is a ClickOnce deployment manifest disguised as a legitimate installer A.
+
+🚀 Execution via Trusted Binary
+When the user clicks the `.application` file, it launches under `dfsvc.exe`—a trusted Windows binary responsible for handling ClickOnce apps. This allows the malware to:
+
+• Bypass User Account Control (UAC)
+• Avoid requiring admin privileges
+• Blend in with legitimate activity A
+
+
+🧬 Payload Delivery
+The `.application` file triggers a .NET-based loader (OneClikNet), which uses AppDomainManager injection to hijack the assembly loading process. This leads to the execution of a Golang-based backdoor called RunnerBeacon A.
+
+So while the `.application` file isn’t an executable itself, it’s the launchpad for the entire attack—making it a critical component of the OneClik threat.
+
+Want to see how to block `.application` files from launching in your environment or simulate this behavior safely in a lab? I’ve got you covered.
