@@ -18,3 +18,6 @@
 | extend HTTP_Get = extract(\"GET ([^-]+)\", 1, SyslogMessage) 
 | extend HTTP_Post = extract(\"POST ([^-]+)\", 1, SyslogMessage) 
 | extend Command = extract(\"- Command ([^-]+)\", 1, SyslogMessage)"
+
+
+https://nortonhealthcarecmg.nortonhealthcare.org/CCM_Proxy_ServerAuth/72057594037927947/SimpleAuthWebService/SimpleAuth.asmx
